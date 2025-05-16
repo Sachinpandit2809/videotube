@@ -1,0 +1,166 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:api_intigration_tutorial/Models/u_ser_model.dart';
+import 'package:api_intigration_tutorial/Models/user_model.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
+
+class MultipartfileUploadScreen extends StatefulWidget {
+  @override
+  _MultipartfileUploadScreenState createState() =>
+      _MultipartfileUploadScreenState();
+}
+
+class _MultipartfileUploadScreenState extends State<MultipartfileUploadScreen> {
+  late UserModelMongo user;
+  File? _avatar;
+  File? _coverImage;
+  final picker = ImagePicker();
+
+  // make geter function of UserModelMongo class
+
+  Future<void> _pickImage(bool isAvatar) async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        if (isAvatar) {
+          _avatar = File(pickedFile.path);
+        } else {
+          _coverImage = File(pickedFile.path);
+        }
+      });
+    }
+  }
+
+  Future<void> _uploadData() async {
+    var request = http.MultipartRequest(
+      'POST',
+      // Uri.parse('http://192.168.59.32:3000/api/v1/users/register'),
+      Uri.parse('http://192.168.59.32:3000/api/v1/users/login'),
+    );
+
+    request.fields['username'] = 'test_user';
+    // request.fields['fullname'] = 'Test User';
+    request.fields['email'] = 'test@gmail.com';
+    request.fields['password'] = '12345678';
+
+    if (_avatar != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'avatar',
+        _avatar!.path,
+        filename: basename(_avatar!.path),
+      ));
+    }
+
+    if (_coverImage != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'coverImage',
+        _coverImage!.path,
+        filename: basename(_coverImage!.path),
+      ));
+    }
+
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      debugPrint("Upload successful");
+    } else {
+      debugPrint("Upload failed with status: ${response.statusCode}");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: Text("Upload Image")),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: () => _pickImage(true),
+            child: Text("Pick Avatar"),
+          ),
+          ElevatedButton(
+            onPressed: () => _pickImage(false),
+            child: Text("Pick Cover Image"),
+          ),
+          ElevatedButton(
+            onPressed: _uploadData,
+            child: Text("Upload"),
+          ),
+          ElevatedButton(
+            onPressed: loginUser,
+            child: Text("Login"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              logout();
+            },
+            child: Text("Log-out"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<dynamic> loginUser() async {
+    var res = await http
+        .post(Uri.parse('http://192.168.59.32:3000/api/v1/users/login'), body: {
+      "username": "t",
+      "email": "t@gmail.com",
+      "password": "12345678"
+    });
+    if (res.statusCode == 200) {
+      // debugPrint("Login successful" + res.body.toString());
+      // UserModel.fromJson(jsonDecode(res.body.toString()));
+      user = UserModelMongo.fromJson(jsonDecode(res.body.toString()));
+      debugPrint(user.data?.accesToken.toString());
+    } else {
+      debugPrint("Login failed with status: ${res.statusCode}");
+    }
+  }
+
+  // Future<dynamic> logout(UserModelMongo user) async {
+  //   var res = await http.post(
+  //       Uri.parse('http://192.168.59.32:3000/api/v1/users/logout'),
+  //       headers: {
+  //         "authorization": "Bearer ${user.data?.accesToken.toString()}",
+  //       });
+  //   if (res.statusCode == 200) {
+  //     debugPrint("logout successful" + res.body.toString());
+  //     // UserModel.fromJson(jsonDecode(res.body.toString()));
+  //     // final user = UserModelMongo.fromJson(jsonDecode(res.body.toString()));
+  //     // debugPrint(user.data?.accesToken.toString());
+  //   } else {
+  //     debugPrint("Login failed with status: ${res.statusCode}");
+  //   }
+  // }
+
+  Future<dynamic> logout() async {
+    if (user.data?.accesToken == null || user.data!.accesToken!.isEmpty) {
+      debugPrint("Error: Access token is missing!");
+      return;
+    }
+
+    debugPrint("Token: ${user.data?.accesToken}");
+
+    var res = await http.post(
+      Uri.parse('http://192.168.59.32:3000/api/v1/users/logout'),
+      headers: {
+        "Authorization": "Bearer ${user.data?.accesToken.toString()}",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (res.statusCode == 200) {
+      debugPrint("Logout successful: ${res.body}");
+    } else {
+      debugPrint("Logout failed with status: ${res.statusCode}");
+      debugPrint("Response: ${res.body}");
+    }
+  }
+}
