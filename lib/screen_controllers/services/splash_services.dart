@@ -1,34 +1,35 @@
-// import 'package:flutter/material.dart';
-// import 'package:mvvm_october/model/user_model.dart';
-// import 'package:mvvm_october/screen_controllers/user_session_controller.dart';
-// import 'package:mvvm_october/screens/home_screen.dart';
-// import 'package:mvvm_october/screens/login_screen.dart';
-// import 'package:mvvm_october/utils/routes/route_names.dart';
-// import 'package:mvvm_october/utils/routes/routes.dart';
+import 'package:flutter/material.dart';
+import 'package:videotube/model/user_model.dart';
+import 'package:videotube/screen_controllers/services/user_session_controller.dart';
 
-// class SplashServices {
-//   Future<UserModel> getUserData() => UserSessionController().getUser();
+import 'package:videotube/screens/home_screen.dart';
+import 'package:videotube/screens/login_screen.dart';
+import 'package:videotube/utils/routes/route_names.dart';
 
-//   void checkAuthentication(BuildContext context) async {
-//     getUserData().then((value) async {
-//       debugPrint(value.email.toString());
-//       if (value.email.toString() == "null" || value.email == '') {
-//         await Future.delayed(Duration(seconds: 4));
-//         // UserSessionController().saveUser(value);
-//         // Navigator.pushNamed(context, RouteNames.login);
-//         Navigator.push(
-//             context, MaterialPageRoute(builder: (context) => LoginScreen()));
-//       } else {
-//         await Future.delayed(Duration(seconds: 4));
+class SplashServices {
+  Future<UserModel> getUserData() => UserSessionController().getUser();
 
-//         // Navigator.pushNamed(context, RouteNames.home);
-//         Navigator.push(
-//             context, MaterialPageRoute(builder: (context) => HomeScreen()));
-//       }
-//     }).onError(
-//       (error, stackTrace) {
-//         debugPrint(error.toString());
-//       },
-//     );
-//   }
-// }
+  void checkAuthentication(BuildContext context) async {
+    getUserData().then((v) async {
+      final value = v.data!.user;
+      debugPrint(value!.email.toString());
+      if (value.email.toString() == "null" || value.email == '') {
+        await Future.delayed(Duration(seconds: 4));
+        UserSessionController().saveUser(v);
+        Navigator.pushNamed(context, RouteNames.login);
+        // Navigator.push(
+        //     context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      } else {
+        await Future.delayed(Duration(seconds: 4));
+
+      
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      }
+    }).onError(
+      (error, stackTrace) {
+        debugPrint(error.toString());
+      },
+    );
+  }
+}

@@ -4,6 +4,7 @@ import 'package:videotube/resource/components/ext/num_ext.dart';
 import 'package:videotube/resource/components/round_button.dart';
 import 'package:videotube/resource/k_text_style.dart';
 import 'package:videotube/screen_controllers/auth_controller.dart';
+import 'package:videotube/utils/routes/route_names.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -59,23 +60,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 20.heightBox,
-                RoundButton(title: "Login",
-                loading: authController.isLoginLoading,
-                 onPress: () {
-                  var data = {
-                            "username": usernameController.text,
-                            "email": emailController.text,
-                            "password": passwordController.text
-                          };
-                          authController.login(data);
-                }),
+                RoundButton(
+                    title: "Login",
+                    loading: authController.isLoginLoading,
+                    onPress: () {
+                      var data = {
+                        "username": usernameController.text,
+                        "email": emailController.text,
+                        "password": passwordController.text
+                      };
+                      authController.login(data, context);
+                    }),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text("Don't have an account?"),
                     TextButton(
-                      
                         onPressed: () {
-                          
+                          Navigator.pushNamed(context, RouteNames.signup);
                         },
                         child: Text("Sign Up"))
                   ],
